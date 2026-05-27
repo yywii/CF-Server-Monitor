@@ -139,9 +139,11 @@ export async function cleanupOldData(db) {
     
     if (!lastClean || (now - parseInt(lastClean.value)) > oneDay) {
       const cutoff = now - 7 * oneDay;
-      const deleteResult = await db.prepare(
-        `DELETE FROM metrics_history WHERE timestamp < ?`
-      ).bind(cutoff).run();
+      const deleteResult = await db.prepare(`DELETE FROM metrics_history WHERE (
+        (typeof(timestamp) = 'integer' AND timestamp < ?)
+        OR 
+        (typeof(timestamp) = 'text' AND timestamp < datetime('now', '-7 days'))
+      )`).bind(cutoff).run();
       
       if (deleteResult.meta.changes > 0) {
         await db.prepare(`

@@ -60,10 +60,16 @@ async function fetchHistoryData(env, sys, request, id, hours, columns) {
     ORDER BY timestamp ASC
   `).bind(id, cutoff).all();
   
-  const processed = history.results.map(row => ({
-    ...row,
-    timestamp: row.timestamp
-  }));
+  const processed = history.results.map(row => {
+    let ts = row.timestamp;
+    if (typeof ts === 'string') {
+      ts = new Date(ts).getTime();
+    }
+    return {
+      ...row,
+      timestamp: ts
+    };
+  });
   
   const sampled = downsampleData(processed, hours);
   
